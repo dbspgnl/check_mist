@@ -1,0 +1,31 @@
+__pycache__/
+
+/env
+/venv
+/weights
+
+# 데이터셋
+datasets/
+setup.sh
+# 결과
+runs/
+
+# yolo pt
+*.pt
+
+# 영상 파일
+data/
+*.mp4
+*.mov
+
+# .vscode
+# "cwd": "${fileDirname}"
+.vscode/
+
+
+# opencv
+opencv/
+
+# build / deploy
+dist/
+build/
