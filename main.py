@@ -14,7 +14,7 @@ class CheckProcessor:
         self.url = url
         self.poll = poll
         self.response = None
-        self.offline = [True,True,True,True,True]
+        self.offline = [0,0,0,0,0]
     
     def start(self):
         schedule.every(self.poll).seconds.do(self.check)
@@ -29,33 +29,30 @@ class CheckProcessor:
         try:
             self.response = requests.get(self.url) # 주기적으로 호출한다.
             if self.server_status():
-                for i in range(1,5): # 채널 1-4까지 검색 (영상 채널)
+                for i in range(1,3): # 채널 1-4까지 검색 (영상 채널)
                     stream = self.response.json().get("streams")
                     if ( # 영상 스트림 on & 분석 스트림 on & 온라인 상태 = 스킵
-                        not self.offline[i] and 
-                        stream.get(f"mist{i}") and 
+                        self.offline[i] > 0  and 
+                        stream.get(f"mist{i}") is not None and 
                         stream.get(f"mist{i}").get("online") == 1 and
-                        ( stream.get(f"mist{i+4}") and stream.get(f"mist{i+4}").get("online") == 1 )
+                        (stream.get(f"mist{i+4}") is not None and stream.get(f"mist{i+4}").get("online") == 1 )
                     ):
                         continue
                     elif ( # 영상 스트림 on & 분석 스트림 off & 오프라인 상태 = 신규 시작 (온라인 처리)
-                        self.offline[i] and 
-                        stream.get(f"mist{i}") and 
+                        self.offline[i] == 0 and 
+                        stream.get(f"mist{i}") is not None and 
                         stream.get(f"mist{i}").get("online") == 1 and
-                        ( not stream.get(f"mist{i+4}") or stream.get(f"mist{i+4}").get("online") == 0 )
+                        (stream.get(f"mist{i+4}") is None or stream.get(f"mist{i+4}").get("online") == 0 )
                     ):
-                        self.offline[i] = False
+                        self.offline[i] += 1
                         cmd = f"mist{i+4}.bat"
                         process = subprocess.Popen(cmd ,shell=True)
-                    elif ( # 영상 스트림 on & 분석 스트림 off & 온라인 상태 = 재시작
-                        not self.offline[i] and 
-                        stream.get(f"mist{i}") and 
-                        stream.get(f"mist{i}").get("online") == 1 and
-                        ( not stream.get(f"mist{i+4}") or stream.get(f"mist{i+4}").get("online") == 0 )
-                    ):
-                        self.offline[i] = True
-                    elif(not stream.get(f"mist{i}")): # 영상 스트림 off = 해당 번호 오프라인으로 전환
-                        self.offline[i] = True
+                        time.sleep(5)
+                    elif(
+                        stream.get(f"mist{i}") is not None or
+                        stream.get(f"mist{i}").get("online") == 0
+                    ): # 영상 스트림 off = 해당 번호 오프라인으로 전환
+                        self.offline[i] = 0
         except Exception as e:
             print("서버 오류: "+str(e))
 
