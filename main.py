@@ -29,7 +29,7 @@ class CheckProcessor:
         try:
             self.response = requests.get(self.url) # 주기적으로 호출한다.
             if self.server_status():
-                for i in range(1,3): # 채널 1-4까지 검색 (영상 채널)
+                for i in range(1,5): # 채널 1-4까지 검색 (영상 채널)
                     stream = self.response.json().get("streams")
                     if ( # 영상 스트림 on & 분석 스트림 on & 온라인 상태 = 스킵
                         self.offline[i] > 0  and 
