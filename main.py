@@ -45,7 +45,7 @@ class CheckProcessor:
                         ( not stream.get(f"mist{i+4}") or stream.get(f"mist{i+4}").get("online") == 0 )
                     ):
                         self.offline[i] = False
-                        cmd = f"mist{i}.bat"
+                        cmd = f"mist{i+4}.bat"
                         process = subprocess.Popen(cmd ,shell=True)
                     elif ( # 영상 스트림 on & 분석 스트림 off & 온라인 상태 = 재시작
                         not self.offline[i] and 
