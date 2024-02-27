@@ -50,11 +50,12 @@ class CheckProcessor:
                         time.sleep(5)
                     elif(
                         stream.get(f"mist{i}") is not None or
-                        stream.get(f"mist{i}").get("online") == 0
+                        (stream.get(f"mist{i}") is not None and stream.get(f"mist{i}").get("online") == 0)
                     ): # 영상 스트림 off = 해당 번호 오프라인으로 전환
                         self.offline[i] = 0
         except Exception as e:
-            print("서버 오류: "+str(e))
+            pass
+            # print("서버 오류: "+str(e))
 
 
 if __name__ == "__main__":
