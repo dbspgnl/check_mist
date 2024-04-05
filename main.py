@@ -4,17 +4,22 @@ import time
 import subprocess
 from multiprocessing import freeze_support
 import argparse
+from ast import literal_eval
 
 class CheckProcessor:
     def __init__(
         self,
         url: str,
         poll: int = 10,
+        channel: str  = None,
     ) -> None:
         self.url = url
         self.poll = poll
         self.response = None
         self.offline = [0,0,0,0,0]
+        # 채널 배열로 변환
+        if channel == None: channel = "[]"
+        self.channel = [i for i in literal_eval(channel)]
     
     def start(self):
         schedule.every(self.poll).seconds.do(self.check)
@@ -27,9 +32,11 @@ class CheckProcessor:
             
     def check(self):
         try:
+            if len(self.channel) == 0: return
             self.response = requests.get(self.url) # 주기적으로 호출한다.
             if self.server_status():
                 for i in range(1,5): # 채널 1-4까지 검색 (영상 채널)
+                    if i+4 not in self.channel: continue # 채널 리스트에 없으면 스킵
                     stream = self.response.json().get("streams")
                     if ( # 영상 스트림 on & 분석 스트림 on & 온라인 상태 = 스킵
                         self.offline[i] > 0  and 
@@ -61,21 +68,13 @@ class CheckProcessor:
 if __name__ == "__main__":
     freeze_support()
     parser = argparse.ArgumentParser(description="check mist online")
-    parser.add_argument(
-        "--url",
-        required=True,
-        help="check server url",
-        type=str,
-    )
-    parser.add_argument(
-        "--poll",
-        required=False,
-        help="polling time seconds",
-        type=int,
-    )
+    parser.add_argument("--url", required=True, type=str, help="check server url")
+    parser.add_argument("--poll", required=False, type=int, help="polling time seconds")
+    parser.add_argument("--channel", default=None, type=str, help="Arrangement of channels to activate")
     args = parser.parse_args()
     processor = CheckProcessor(
         url=args.url,
-        poll=args.poll
+        poll=args.poll,
+        channel=args.channel
     )
     processor.start()
